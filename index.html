@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poisson Distribution Simulation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #f0f8ff;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            font-size: 18px;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #2c3e50;
+            font-size: 24px;
+        }
+        label {
+            margin: 15px 0;
+            font-weight: bold;
+            color: #34495e;
+            font-size: 18px;
+        }
+        input[type="number"],
+        select {
+            width: calc(100% - 22px);
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+            margin-bottom: 25px;
+            font-size: 16px;
+        }
+        input[type="number"]:focus,
+        select:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .results {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: rgba(236, 240, 241, 0.9);
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        .result-item {
+            margin: 15px 0;
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 18px;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Poisson Distribution Calculator</h1>
+    
+    <div>
+        <label for="mean">Enter Mean (λ):</label>
+        <input type="number" id="mean" value="0.5" step="0.1" required>
+    </div>
+    
+    <div>
+        <label for="timePeriod">Select Time Period:</label>
+        <select id="timePeriod">
+            <option value="1">1 Week</option>
+            <option value="3">3 Weeks</option>
+        </select>
+    </div>
+    
+    <div>
+        <label for="accidentCondition">Select Accident Condition:</label>
+        <select id="accidentCondition">
+            <option value="lessThan">Less than</option>
+            <option value="greaterThan">Greater than</option>
+            <option value="exactly">Exactly</option>
+        </select>
+    </div>
+    
+    <div>
+        <label for="numberOfAccidents">Enter Number of Accidents (x):</label>
+        <input type="number" id="numberOfAccidents" value="2" required>
+    </div>
+
+    <button id="calculateBtn">Calculate Probabilities</button>
+
+    <div class="results" id="results" style="display:none;">
+        <h2>Results</h2>
+        <div class="result-item" id="calculatedProbability"></div>
+        <div class="result-item" id="noAccidentsThreeWeeks"></div>
+    </div>
+</div>
+
+<script>
+    function poissonProbability(lmbda, k) {
+        return (Math.exp(-lmbda) * Math.pow(lmbda, k)) / factorial(k);
+    }
+
+    function factorial(n) {
+        if (n === 0 || n === 1) return 1;
+        let result = 1;
+        for (let i = 2; i <= n; i++) {
+            result *= i;
+        }
+        return result;
+    }
+
+    function calculateProbabilities() {
+        const mean = parseFloat(document.getElementById('mean').value);
+        const timePeriod = parseInt(document.getElementById('timePeriod').value);
+        const accidentCondition = document.getElementById('accidentCondition').value;
+        const numberOfAccidents = parseInt(document.getElementById('numberOfAccidents').value);
+        const resultsDiv = document.getElementById('results');
+
+        const lambda = mean * timePeriod;
+
+        let calculatedProbability = 0;
+        let conditionString = '';
+
+        if (accidentCondition === 'lessThan') {
+            for (let k = 0; k < numberOfAccidents; k++) {
+                calculatedProbability += poissonProbability(lambda, k);
+            }
+            conditionString = `P(X ≤ ${numberOfAccidents})`;
+        } else if (accidentCondition === 'greaterThan') {
+            for (let k = 0; k <= numberOfAccidents; k++) {
+                calculatedProbability += poissonProbability(lambda, k);
+            }
+            calculatedProbability = 1 - calculatedProbability;
+            conditionString = `P(X > ${numberOfAccidents})`;
+        } else if (accidentCondition === 'exactly') {
+            calculatedProbability = poissonProbability(lambda, numberOfAccidents);
+            conditionString = `P(X = ${numberOfAccidents})`;
+        }
+
+        const probabilityPercentage = (calculatedProbability * 100).toFixed(2);
+
+        document.getElementById('calculatedProbability').innerText = `${conditionString}: ${calculatedProbability.toFixed(4)}`;
+        document.getElementById('calculatedProbability').innerText += `\nHence, the probability that in a particular week there will be ${accidentCondition.replace('lessThan', 'less than').replace('greaterThan', 'greater than').replace('exactly', 'exactly')} ${numberOfAccidents} accidents is ${probabilityPercentage}%`;
+
+        if (timePeriod === 3) {
+            const P_X_0_threeWeeks = poissonProbability(lambda, 0);
+            const noAccidentsPercentage = (P_X_0_threeWeeks * 100).toFixed(2);
+            document.getElementById('noAccidentsThreeWeeks').innerText = `Probability of no accidents in 3 weeks: ${P_X_0_threeWeeks.toFixed(4)}\nHence, the probability that in a three week period there will be no accidents is ${noAccidentsPercentage}%`;
+        } else {
+            document.getElementById('noAccidentsThreeWeeks').innerText = '';
+        }
+
+        resultsDiv.style.display = 'block';
+    }
+
+    document.getElementById('calculateBtn').addEventListener('click', calculateProbabilities);
+</script>
+
+</body>
+</html>
